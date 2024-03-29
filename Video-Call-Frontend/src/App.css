@@ -1,0 +1,20 @@
+*{
+  box-sizing: border-box;
+}
+.App {
+  text-align: center;
+  background-color: #231F20;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 10vh;
+  background: white;
+  padding: 15px;
+  overflow: hidden;
+}

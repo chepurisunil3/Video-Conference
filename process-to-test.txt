@@ -1,0 +1,29 @@
+After README.md steps are done,
+
+Login with a name
+
+Host operations:
+1. If you want to host a call click on Host a call. The room name will be the host name itself.
+2. Host can request users to join. Click on '+' icon at below and enter the username to request (Please make sure the given user is opened in different browser or incognito).
+3. Host can run a timer. Click on number of seconds to run the timer. It will be displayed in all the room participants. At last alarm sound will be played
+4. Host can mute any user. Click on mute icon displayed on participant block and user will receive an alert as host muted you
+5. Host can remove any user. Click on "Profile icon with red color" and the participant will be removed from call. It will be reflected on all the other participants too
+6. Host can leave the call. Click on call icon at below and, host and all other participants will be left the room and redirected to dashboard
+
+Participant operations:
+1. If you want to join a call. Click on join a call and enter the host name to enter the room.
+2. Participant screen will show timer if host starts the timer.
+3. Participant will receive alert if host mutes the current participant
+4. Participant can leave the call. Click on call icon at below and user will be redirected to dashboard
+
+
+Recommented Steps to Process:
+
+1. Open three browsers (Chrome, Chrome incognito and MS Edge or firefox)
+2. Login on each browser with 3 different names (Ex: Alice, Bob and Steve on each browser)
+3. Click on Host a call from one of the browser page (Ex: on Alice browser) (Remember the host name to join later!)
+4. Open another browser (Ex: Bob) and click on join a call and enter the host name (Ex: Alice)
+5. Open host browser, click on + icon and enter another user name to request to join(Ex: Steve)
+6. Open the third browser(Steve) and accept the request
+
+Now play with the operations that are supported!
