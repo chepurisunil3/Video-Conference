@@ -1,34 +1,45 @@
 import express, { Express, Request, Response } from "express";
-import socket, { Socket } from "socket.io";
-import { PeerServer } from "peer";
 import cors from "cors";
+import { Server } from "socket.io";
 import {
-	checkIfUserExists,
-	newSocketConnection,
+  checkIfUserExists,
+  newSocketConnection,
 } from "./controllers/socket-management";
+
 const app: Express = express();
-app.use(cors());
+const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:3000";
+const port = Number(process.env.PORT ?? 3001);
+
+app.use(cors({ origin: frontendOrigin }));
+app.use(express.json());
+
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ success: true });
+});
+
 app.get("/checkUserName", (req: Request, res: Response) => {
-	const userName: string = String(req.query.userName);
-	if (userName) {
-		const isUserRegistered = checkIfUserExists(userName);
-		res.json({
-			success: isUserRegistered ? false : true,
-			reason: isUserRegistered ? "Username is already taken" : null,
-		});
-	} else {
-		res.json({ success: false, reason: "Username cannot be empty" });
-	}
+  const userName = String(req.query.userName ?? "").trim();
+  if (!userName) {
+    res.json({ success: false, reason: "Username cannot be empty" });
+    return;
+  }
+
+  const isUserRegistered = checkIfUserExists(userName);
+  res.json({
+    success: !isUserRegistered,
+    reason: isUserRegistered ? "Username is already taken" : null,
+  });
 });
-const server = app.listen("3001");
-const io: socket.Server = new socket.Server(server, {
-	cors: {
-		origin: "http://localhost:3000",
-		methods: ["GET", "POST", "WSS"],
-	},
+
+const server = app.listen(port, () => {
+  console.log(`Video conference backend listening on port ${port}`);
 });
+
+const io = new Server(server, {
+  cors: {
+    origin: frontendOrigin,
+    methods: ["GET", "POST"],
+  },
+});
+
 io.on("connection", (socket) => newSocketConnection(io, socket));
-
-const peerServer = PeerServer({ port: 9000, path: "/" });
-
-peerServer.on("connection", (client) => {});

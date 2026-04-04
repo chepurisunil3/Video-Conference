@@ -1,152 +1,342 @@
-import React, { useEffect, useState } from "react";
-import { Button, Grid, TextField } from "@mui/material";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import AddIcCallRoundedIcon from "@mui/icons-material/AddIcCallRounded";
+import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
+import MeetingRoomRoundedIcon from "@mui/icons-material/MeetingRoomRounded";
 import io from "socket.io-client";
 import HostView from "./host-view";
 import ParticipantView from "./participant-view";
+
+const socketUrl = `http://${window.location.hostname}:3001`;
+
 function VideoCall({ userName }) {
-	const [socket, setSocket] = useState(null);
-	const [showJoinCall, setShowJoinCall] = useState(false);
-	const [showJoinRequest, setShowJoinRequest] = useState(false);
-	const [isHostingACall, setIsHostingACall] = useState(false);
-	const [didJoinedInCall, setDidJoinedInCall] = useState(false);
-	const [roomName, setRoomName] = useState("");
+  const [socket, setSocket] = useState(null);
+  const [roomName, setRoomName] = useState("");
+  const [joinRoomName, setJoinRoomName] = useState("");
+  const [activeMode, setActiveMode] = useState(null);
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [joinRequest, setJoinRequest] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
 
-	const handleClose = () => {
-		setShowJoinCall(false);
-		setShowJoinRequest(false);
-	};
+  const showMessage = (message, severity = "info") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
-	const joinRoom = () => {
-		socket.emit("joinCall", { roomToJoin: roomName });
-	};
+  useEffect(() => {
+    const nextSocket = io(socketUrl, {
+      query: { userName },
+      transports: ["websocket", "polling"],
+    });
+    setSocket(nextSocket);
 
-	const hostCall = (e) => {
-		socket.emit("hostCall");
-	};
+    return () => {
+      nextSocket.disconnect();
+    };
+  }, [userName]);
 
-	useEffect(() => {
-		if (socket) {
-			const hostingResponse = (response) => {
-				if (response.success) {
-					setRoomName(response.roomName);
-					setDidJoinedInCall(false);
-					setIsHostingACall(true);
-				}
-			};
+  useEffect(() => {
+    if (!socket) {
+      return undefined;
+    }
 
-			socket.on("hostingResponse", hostingResponse);
-			socket.on("requestToJoin", (data) => {
-				setRoomName(data.roomName);
-				setShowJoinRequest(true);
-			});
-			socket.on("defaultPoll", (data) => {
-				if (data.joinedRoom) {
-					setDidJoinedInCall(true);
-					setRoomName(data.joinedRoom);
-				}
-				if (data.hostedRoom) setIsHostingACall(true);
-			});
-			socket.on("joiningResponse", (response) => {
-				if (response.success) {
-					setRoomName(response.roomName);
-					setIsHostingACall(false);
-					setDidJoinedInCall(true);
-					setShowJoinCall(false);
-					setShowJoinRequest(false);
-				}
-			});
-		}
-	}, [socket]);
+    const handleHostingResponse = (response) => {
+      if (!response.success) {
+        showMessage(response.reason || "Unable to host a call.", "warning");
+        return;
+      }
+      setRoomName(response.roomName);
+      setActiveMode("host");
+    };
 
-	const joinExistingCall = (e) => {
-		setShowJoinCall(true);
-	};
+    const handleJoiningResponse = (response) => {
+      if (!response.success) {
+        showMessage(response.reason || "Unable to join the room.", "warning");
+        return;
+      }
+      setRoomName(response.roomName);
+      setJoinRoomName(response.roomName);
+      setActiveMode("participant");
+      setJoinDialogOpen(false);
+      setJoinRequest(null);
+    };
 
-	useEffect(() => {
-		const newSocket = io(`http://${window.location.hostname}:3001`, {
-			query: { userName },
-		});
-		setSocket(newSocket);
-		return () => newSocket.close();
-	}, [setSocket]);
+    const handleDefaultPoll = (response) => {
+      if (response.hostedRoom) {
+        setRoomName(response.hostedRoom);
+        setActiveMode("host");
+        return;
+      }
+      if (response.joinedRoom) {
+        setRoomName(response.joinedRoom);
+        setJoinRoomName(response.joinedRoom);
+        setActiveMode("participant");
+      }
+    };
 
-	return (
-		<>
-			{!isHostingACall && !didJoinedInCall && (
-				<Grid
-					container
-					height={"100vh"}
-					justifyContent="center"
-					alignContent={"center"}
-					direction="column"
-				>
-					<Button
-						onClick={hostCall}
-						style={{ width: "200px", fontSize: "12px" }}
-						variant="contained"
-					>
-						Host a new call
-					</Button>
-					<Button
-						onClick={joinExistingCall}
-						style={{ width: "200px", fontSize: "12px", marginTop: "10px" }}
-						variant="contained"
-					>
-						Join a call
-					</Button>
-				</Grid>
-			)}
-			{isHostingACall && socket && (
-				<HostView socket={socket} setIsHostingACall={setIsHostingACall} />
-			)}
-			{didJoinedInCall && socket && (
-				<ParticipantView
-					socket={socket}
-					roomName={roomName}
-					setDidJoinedInCall={setDidJoinedInCall}
-				/>
-			)}
-			<Dialog open={showJoinCall} onClose={handleClose}>
-				<DialogTitle>Join a Call</DialogTitle>
-				<DialogContent>
-					<DialogContentText>
-						Please enter the room name to join
-					</DialogContentText>
-					<TextField
-						value={roomName}
-						onChange={(e) => setRoomName(e.target.value)}
-						autoFocus
-						margin="dense"
-						id="room"
-						label="Room Name"
-						type="text"
-						fullWidth
-						variant="standard"
-					/>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleClose}>Cancel</Button>
-					<Button onClick={joinRoom}>Join</Button>
-				</DialogActions>
-			</Dialog>
-			<Dialog open={showJoinRequest} onClose={handleClose}>
-				<DialogTitle>Request to join</DialogTitle>
-				<DialogContent>
-					<DialogContentText>
-						{roomName} requested you to join!
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleClose}>Decline</Button>
-					<Button onClick={joinRoom}>Accept</Button>
-				</DialogActions>
-			</Dialog>
-		</>
-	);
+    const handleJoinRequest = (response) => {
+      setJoinRequest(response);
+    };
+
+    const handleInviteResponse = (response) => {
+      if (!response.success) {
+        showMessage(response.reason || "Unable to send the invite.", "warning");
+        return;
+      }
+      showMessage("Invite sent.");
+    };
+
+    socket.on("hostingResponse", handleHostingResponse);
+    socket.on("joiningResponse", handleJoiningResponse);
+    socket.on("defaultPoll", handleDefaultPoll);
+    socket.on("requestToJoin", handleJoinRequest);
+    socket.on("requestJoiningResponse", handleInviteResponse);
+
+    return () => {
+      socket.off("hostingResponse", handleHostingResponse);
+      socket.off("joiningResponse", handleJoiningResponse);
+      socket.off("defaultPoll", handleDefaultPoll);
+      socket.off("requestToJoin", handleJoinRequest);
+      socket.off("requestJoiningResponse", handleInviteResponse);
+    };
+  }, [socket]);
+
+  const stats = useMemo(
+    () => [
+      { label: "One-click hosting", value: "Instant rooms" },
+      { label: "Live media", value: "Audio + video" },
+      { label: "Host control", value: "Mute, remove, timer" },
+    ],
+    [],
+  );
+
+  const hostMeeting = () => {
+    socket?.emit("hostCall");
+  };
+
+  const joinMeeting = () => {
+    if (!joinRoomName.trim()) {
+      showMessage("Enter a room code to join.", "warning");
+      return;
+    }
+    socket?.emit("joinCall", { roomToJoin: joinRoomName.trim() });
+  };
+
+  const leaveRoomState = (reason) => {
+    setActiveMode(null);
+    setRoomName("");
+    setJoinRoomName("");
+    if (reason) {
+      showMessage(reason);
+    }
+  };
+
+  if (socket && activeMode === "host" && roomName) {
+    return (
+      <HostView
+        socket={socket}
+        userName={userName}
+        roomName={roomName}
+        onLeaveRoom={leaveRoomState}
+      />
+    );
+  }
+
+  if (socket && activeMode === "participant" && roomName) {
+    return (
+      <ParticipantView
+        socket={socket}
+        userName={userName}
+        roomName={roomName}
+        onLeaveRoom={leaveRoomState}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Box className="lobby-shell">
+        <Box className="lobby-main-card">
+          <Grid container spacing={3} alignItems="stretch">
+            <Grid item xs={12} lg={7}>
+              <Box className="lobby-hero-panel">
+                <Chip
+                  label="Modern meeting workspace"
+                  className="floating-chip"
+                />
+                <Typography variant="h2" className="hero-title">
+                  Run a polished video conference from your browser.
+                </Typography>
+                <Typography className="hero-copy">
+                  Host a room, invite teammates, and collaborate with live
+                  audio, live video, hand raise, meeting timer, mute controls,
+                  and a cleaner multi-user layout.
+                </Typography>
+                <Grid container spacing={2} mt={1}>
+                  {stats.map((stat) => (
+                    <Grid item xs={12} sm={4} key={stat.label}>
+                      <Box className="feature-card">
+                        <Typography className="feature-card-title">
+                          {stat.label}
+                        </Typography>
+                        <Typography className="feature-card-copy">
+                          {stat.value}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} lg={5}>
+              <Box className="lobby-actions-panel">
+                <Typography className="meeting-kicker">
+                  Ready to collaborate
+                </Typography>
+                <Typography variant="h4" className="meeting-title dark-text">
+                  Welcome, {userName}
+                </Typography>
+                <Typography className="meeting-subtitle dark-subtitle">
+                  Create a room for your team or join a live room with the code
+                  from a host.
+                </Typography>
+
+                <Stack spacing={1.25} mt={4}>
+                  <Button
+                    variant="contained"
+                    className="primary-action-btn"
+                    startIcon={<VideoCallRoundedIcon />}
+                    onClick={hostMeeting}
+                  >
+                    Host a new meeting
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    className="secondary-action-btn"
+                    startIcon={<MeetingRoomRoundedIcon />}
+                    onClick={() => setJoinDialogOpen(true)}
+                  >
+                    Join with room code
+                  </Button>
+                </Stack>
+
+                <Box className="meeting-info-card">
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <AddIcCallRoundedIcon className="accent-icon" />
+                    <Box>
+                      <Typography className="meeting-info-title">
+                        Best experience
+                      </Typography>
+                      <Typography className="meeting-info-copy">
+                        Allow camera and microphone access when the browser
+                        asks.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+
+      <Dialog
+        open={joinDialogOpen}
+        onClose={() => setJoinDialogOpen(false)}
+        PaperProps={{ className: "modern-dialog" }}
+      >
+        <DialogTitle>Join a live room</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Room code"
+            fullWidth
+            value={joinRoomName}
+            onChange={(event) => setJoinRoomName(event.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setJoinDialogOpen(false)}>Cancel</Button>
+          <Button className="dialog-primary-btn" onClick={joinMeeting}>
+            Join meeting
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(joinRequest)}
+        onClose={() => setJoinRequest(null)}
+        PaperProps={{ className: "modern-dialog" }}
+      >
+        <DialogTitle>Meeting invitation</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {joinRequest?.requestedBy || joinRequest?.roomName} invited you to
+            join room {joinRequest?.roomName}.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setJoinRequest(null)}>Decline</Button>
+          <Button
+            className="dialog-primary-btn"
+            onClick={() => {
+              setJoinRoomName(joinRequest?.roomName || "");
+              setJoinRequest(null);
+              socket?.emit("joinCall", {
+                roomToJoin: joinRequest?.roomName || "",
+              });
+            }}
+          >
+            Accept
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3200}
+        onClose={() =>
+          setSnackbar((currentSnackbar) => ({
+            ...currentSnackbar,
+            open: false,
+          }))
+        }
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() =>
+            setSnackbar((currentSnackbar) => ({
+              ...currentSnackbar,
+              open: false,
+            }))
+          }
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
 }
+
 export default VideoCall;

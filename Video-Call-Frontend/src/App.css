@@ -1,20 +1,522 @@
-*{
-  box-sizing: border-box;
+* {
+	box-sizing: border-box;
 }
-.App {
-  text-align: center;
-  background-color: #231F20;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+
+:root {
+	--brand-start: #5b5fef;
+	--brand-mid: #428af5;
+	--brand-end: #1dc9e7;
+	--page-bg: #f4f7ff;
+	--panel-bg: rgba(255, 255, 255, 0.92);
+	--panel-border: rgba(255, 255, 255, 0.72);
+	--text-strong: #15213d;
+	--text-soft: #64748b;
+	--shadow-xl: 0 32px 80px rgba(63, 90, 173, 0.18);
+	--shadow-lg: 0 18px 45px rgba(63, 90, 173, 0.14);
 }
-.app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 10vh;
-  background: white;
-  padding: 15px;
-  overflow: hidden;
+
+html,
+body,
+#root {
+	margin: 0;
+	min-height: 100%;
+}
+
+body {
+	font-family: "Inter", "Segoe UI", sans-serif;
+	background:
+		radial-gradient(circle at top left, rgba(91, 95, 239, 0.17), transparent 28%),
+		radial-gradient(circle at right center, rgba(29, 201, 231, 0.17), transparent 22%),
+		linear-gradient(180deg, #f8fbff 0%, #eff4ff 100%);
+	color: var(--text-strong);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+}
+
+.app-shell {
+	min-height: 100vh;
+	position: relative;
+	padding: 24px;
+}
+
+.auth-shell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.auth-card-shell {
+	width: min(1120px, 100%);
+	min-height: 640px;
+	border-radius: 32px;
+	background: var(--panel-bg);
+	box-shadow: var(--shadow-xl);
+	backdrop-filter: blur(18px);
+	overflow: hidden;
+	display: grid;
+	grid-template-columns: 1.25fr 0.9fr;
+	border: 1px solid var(--panel-border);
+}
+
+.auth-hero-panel,
+.lobby-hero-panel {
+	background: linear-gradient(155deg, var(--brand-start) 0%, var(--brand-mid) 48%, var(--brand-end) 100%);
+	padding: 48px 42px;
+	color: #ffffff;
+	position: relative;
+	overflow: hidden;
+}
+
+.auth-hero-panel::before,
+.lobby-hero-panel::before {
+	content: "";
+	position: absolute;
+	inset: auto -10% -18% auto;
+	width: 280px;
+	height: 280px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	filter: blur(2px);
+}
+
+.auth-form-panel,
+.lobby-actions-panel,
+.meeting-side-panel,
+.side-card,
+.modern-dialog {
+	background: rgba(255, 255, 255, 0.94);
+}
+
+.auth-form-panel,
+.lobby-actions-panel {
+	padding: 42px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.floating-chip,
+.header-chip,
+.ghost-chip-btn {
+	background: rgba(255, 255, 255, 0.18) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.26) !important;
+	font-weight: 600 !important;
+	backdrop-filter: blur(10px);
+}
+
+.hero-title {
+	margin-top: 28px !important;
+	font-size: clamp(2.4rem, 4vw, 4rem) !important;
+	line-height: 1.05 !important;
+	font-weight: 800 !important;
+	max-width: 560px;
+}
+
+.hero-copy,
+.meeting-subtitle {
+	margin-top: 18px !important;
+	max-width: 560px;
+	line-height: 1.7 !important;
+	color: rgba(255, 255, 255, 0.86);
+}
+
+.feature-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	margin-top: 36px;
+}
+
+.feature-card,
+.meeting-info-card {
+	border-radius: 22px;
+	padding: 20px;
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.feature-card-title,
+.meeting-info-title,
+.side-card-title,
+.room-code-text,
+.app-brand-title {
+	font-weight: 700 !important;
+}
+
+.feature-card-copy,
+.meeting-info-copy,
+.side-card-copy,
+.dark-subtitle,
+.input-label {
+	color: var(--text-soft) !important;
+}
+
+.meeting-kicker {
+	font-size: 0.9rem !important;
+	font-weight: 700 !important;
+	text-transform: none !important;
+	letter-spacing: 0.02em;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.dark-text {
+	color: var(--text-strong) !important;
+}
+
+.dark-subtitle {
+	color: var(--text-soft) !important;
+}
+
+.input-label {
+	font-size: 0.92rem !important;
+	font-weight: 600 !important;
+	margin-bottom: 10px !important;
+}
+
+.modern-input {
+	background: #ffffff;
+	border-radius: 16px;
+}
+
+.primary-action-btn,
+.dialog-primary-btn,
+.timer-btn {
+	background: linear-gradient(90deg, var(--brand-start), var(--brand-end)) !important;
+	color: #ffffff !important;
+	border: 0 !important;
+	border-radius: 16px !important;
+	text-transform: none !important;
+	font-weight: 700 !important;
+	box-shadow: 0 18px 34px rgba(66, 138, 245, 0.24);
+}
+
+.primary-action-btn {
+	padding: 14px 18px !important;
+}
+
+.secondary-action-btn,
+.logout-btn,
+.timer-btn {
+	text-transform: none !important;
+	font-weight: 700 !important;
+	border-radius: 16px !important;
+}
+
+.secondary-action-btn,
+.logout-btn,
+.timer-btn,
+.copy-btn,
+.tile-action-btn,
+.control-button,
+.ghost-chip-btn {
+	box-shadow: none !important;
+}
+
+.secondary-action-btn {
+	border: 1px solid rgba(91, 95, 239, 0.16) !important;
+	color: var(--text-strong) !important;
+	padding: 13px 18px !important;
+	background: rgba(245, 248, 255, 0.92) !important;
+}
+
+.submit-auth-btn {
+	margin-top: 24px !important;
+}
+
+.top-app-bar {
+	width: min(1240px, 100%);
+	margin: 0 auto 22px;
+	padding: 20px 24px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-radius: 24px;
+	background: rgba(255, 255, 255, 0.84);
+	border: 1px solid rgba(255, 255, 255, 0.78);
+	box-shadow: var(--shadow-lg);
+	backdrop-filter: blur(18px);
+}
+
+.header-chip,
+.logout-btn {
+	color: var(--text-strong) !important;
+	background: rgba(244, 247, 255, 0.94) !important;
+	border: 1px solid rgba(91, 95, 239, 0.12) !important;
+}
+
+.lobby-shell,
+.meeting-shell {
+	width: min(1240px, 100%);
+	margin: 0 auto;
+}
+
+.lobby-main-card,
+.meeting-main-panel {
+	border-radius: 32px;
+	padding: 18px;
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(18px);
+	box-shadow: var(--shadow-xl);
+	border: 1px solid rgba(255, 255, 255, 0.84);
+}
+
+.lobby-actions-panel {
+	min-height: 100%;
+	border-radius: 26px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+}
+
+.meeting-info-card {
+	margin-top: 28px;
+	background: #f6f9ff;
+	border: 1px solid rgba(91, 95, 239, 0.1);
+}
+
+.accent-icon {
+	color: var(--brand-start);
+}
+
+.meeting-main-panel {
+	padding: 26px;
+}
+
+.meeting-header-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 20px;
+	align-items: flex-start;
+	margin-bottom: 24px;
+}
+
+.meeting-title {
+	font-weight: 800 !important;
+	line-height: 1.1 !important;
+}
+
+.meeting-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.72fr);
+	gap: 22px;
+}
+
+.stage-section,
+.meeting-side-panel {
+	border-radius: 28px;
+	padding: 20px;
+	background: rgba(255, 255, 255, 0.68);
+	border: 1px solid rgba(255, 255, 255, 0.82);
+}
+
+.video-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 16px;
+}
+
+.participant-tile {
+	position: relative;
+	min-height: 240px;
+	border-radius: 24px;
+	overflow: hidden;
+	background: linear-gradient(180deg, #10172d 0%, #182446 100%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.local-tile {
+	outline: 2px solid rgba(29, 201, 231, 0.35);
+}
+
+.participant-video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.participant-placeholder {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	padding: 20px;
+}
+
+.participant-avatar,
+.list-avatar {
+	background: linear-gradient(135deg, var(--brand-start), var(--brand-end)) !important;
+	color: #ffffff !important;
+	font-weight: 800 !important;
+}
+
+.participant-avatar {
+	width: 68px !important;
+	height: 68px !important;
+}
+
+.participant-overlay {
+	position: absolute;
+	inset: 0 0 auto 0;
+	padding: 14px;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	z-index: 2;
+	background: linear-gradient(180deg, rgba(10, 15, 30, 0.78) 0%, rgba(10, 15, 30, 0) 100%);
+}
+
+.participant-chip {
+	background: rgba(255, 255, 255, 0.12) !important;
+	color: #ffffff !important;
+	backdrop-filter: blur(8px);
+}
+
+.participant-chip.muted {
+	background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.participant-chip.attention {
+	background: rgba(29, 201, 231, 0.18) !important;
+}
+
+.tile-action-btn,
+.control-button,
+.copy-btn {
+	width: 42px !important;
+	height: 42px !important;
+	background: rgba(255, 255, 255, 0.14) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.14) !important;
+	backdrop-filter: blur(10px);
+}
+
+.tile-action-btn.danger,
+.control-button.end-call {
+	background: linear-gradient(135deg, #ff6b6b, #ff3f6b) !important;
+}
+
+.meeting-controls-bar {
+	margin-top: 18px;
+	padding: 14px 18px;
+	display: inline-flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	border-radius: 999px;
+	background: rgba(12, 18, 34, 0.88);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.control-button.muted {
+	background: rgba(255, 107, 107, 0.22) !important;
+}
+
+.control-button.active {
+	background: linear-gradient(135deg, var(--brand-start), var(--brand-end)) !important;
+}
+
+.side-card {
+	border-radius: 22px;
+	padding: 20px;
+	border: 1px solid rgba(91, 95, 239, 0.08);
+	box-shadow: 0 18px 40px rgba(80, 102, 179, 0.08);
+}
+
+.gradient-card {
+	background: linear-gradient(135deg, rgba(91, 95, 239, 0.96), rgba(29, 201, 231, 0.92));
+	color: #ffffff;
+}
+
+.gradient-card .side-card-label,
+.gradient-card .room-code-text,
+.gradient-card .side-card-copy {
+	color: #ffffff !important;
+}
+
+.side-card-label {
+	font-size: 0.84rem !important;
+	font-weight: 700 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.82;
+}
+
+.soft-divider {
+	margin-top: 12px !important;
+	margin-bottom: 12px !important;
+}
+
+.participant-list {
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+	max-height: 280px;
+	overflow-y: auto;
+}
+
+.timer-btn {
+	min-width: 68px !important;
+	padding: 10px 0 !important;
+}
+
+.room-code-text {
+	letter-spacing: 0.04em;
+}
+
+.modern-dialog {
+	border-radius: 24px !important;
+	box-shadow: var(--shadow-xl) !important;
+}
+
+@media (max-width: 1100px) {
+	.auth-card-shell,
+	.meeting-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.auth-hero-panel,
+	.auth-form-panel {
+		padding: 32px 28px;
+	}
+}
+
+@media (max-width: 768px) {
+	.app-shell {
+		padding: 14px;
+	}
+
+	.top-app-bar,
+	.meeting-header-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.lobby-main-card,
+	.meeting-main-panel,
+	.stage-section,
+	.meeting-side-panel {
+		padding: 16px;
+	}
+
+	.feature-row {
+		grid-template-columns: 1fr;
+	}
+
+	.video-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.participant-tile {
+		min-height: 210px;
+	}
 }
