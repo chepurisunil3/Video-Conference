@@ -1,7 +1,6 @@
-SET BASEPATH="c:\Coding\Assignments\Video Conference"
-
-pushd %BASEPATH%
-
-cd Video-Call-Frontend
+@echo off
+pushd "%~dp0Video-Call-Frontend"
 
 npm install
+
+popd

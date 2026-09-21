@@ -20,8 +20,7 @@ import MeetingRoomRoundedIcon from "@mui/icons-material/MeetingRoomRounded";
 import io from "socket.io-client";
 import HostView from "./host-view";
 import ParticipantView from "./participant-view";
-
-const socketUrl = `http://${window.location.hostname}:3001`;
+import { BACKEND_URL } from "../config";
 
 function VideoCall({ userName }) {
   const [socket, setSocket] = useState(null);
@@ -41,7 +40,7 @@ function VideoCall({ userName }) {
   };
 
   useEffect(() => {
-    const nextSocket = io(socketUrl, {
+    const nextSocket = io(BACKEND_URL, {
       query: { userName },
       transports: ["websocket", "polling"],
     });

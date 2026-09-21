@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import VideoCall from "./pages/video-call";
+import { BACKEND_URL } from "./config";
 import "./App.css";
 
 const initialFormState = {
@@ -51,7 +52,7 @@ function App() {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `http://${window.location.hostname}:3001/checkUserName?userName=${encodeURIComponent(currentUserName)}`,
+        `${BACKEND_URL}/checkUserName?userName=${encodeURIComponent(currentUserName)}`,
       );
       const result = await response.json();
       if (!result.success) {

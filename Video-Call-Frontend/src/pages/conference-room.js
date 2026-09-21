@@ -48,6 +48,32 @@ const defaultMediaState = {
   handRaised: false,
 };
 
+const playAlarmTone = () => {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    const now = audioContext.currentTime;
+
+    [0, 0.3, 0.6].forEach((startOffset) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 880;
+      gainNode.gain.setValueAtTime(0.0001, now + startOffset);
+      gainNode.gain.exponentialRampToValueAtTime(0.3, now + startOffset + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + 0.2);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start(now + startOffset);
+      oscillator.stop(now + startOffset + 0.25);
+    });
+
+    setTimeout(() => audioContext.close(), 1200);
+  } catch (error) {
+    console.error("Failed to play alarm tone", error);
+  }
+};
+
 function ParticipantTile({
   participant,
   isLocal = false,
@@ -522,8 +548,7 @@ function ConferenceRoom({ socket, userName, roomName, mode, onLeaveRoom }) {
     };
 
     const handleTimerStopped = () => {
-      const audio = new Audio("https://www.fesliyanstudios.com/play-mp3/4383");
-      audio.play().catch(() => undefined);
+      playAlarmTone();
       setTimer(-1);
     };
 

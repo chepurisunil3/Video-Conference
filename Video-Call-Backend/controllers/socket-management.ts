@@ -299,12 +299,11 @@ export const checkIfUserExists = (userName: string) => {
   }
 
   const existingUserKey = findUserNameKey(trimmedUserName);
-  if (existingUserKey && getOrCreateUserState(existingUserKey).socketId) {
-    return true;
+  if (!existingUserKey) {
+    return false;
   }
 
-  getOrCreateUserState(trimmedUserName);
-  return false;
+  return Boolean(listOfUsers[existingUserKey]?.socketId);
 };
 
 const sendDefaultPollData = (socket: Socket) => {
@@ -758,4 +757,11 @@ const handleDisconnect = (io: Server, socket: Socket) => {
   clearTimerForUser(userName);
   userState.socketId = null;
   userState.mediaState = createDefaultMediaState();
+
+  if (!userState.hostedRoom && !userState.joinedRoom) {
+    const key = findUserNameKey(userName);
+    if (key) {
+      delete listOfUsers[key];
+    }
+  }
 };
